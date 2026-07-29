@@ -13,22 +13,22 @@ import lombok.Setter;
 @Setter
 public class RegisterRequest {
 
-    @NotBlank(message = "Name is required")
-    private String name;
+    @NotBlank(message = "First name is required")
+    private String firstName;
+
+    @NotBlank(message = "Last name is required")
+    private String lastName;
 
     @NotBlank(message = "Email is required")
     @Email(message = "Invalid email format")
     private String email;
 
     @NotBlank(message = "Password is required")
-    @Size(
-        min = 8,
-        message = "Password must be at least 8 characters"
-    )
+    @Size(min = 8, message = "Password must be at least 8 characters")
     private String password;
 
-    @NotBlank(message = "Phone number is required")
-    private String phone;
+    @NotBlank(message = "Mobile number is required")
+    private String mobile;
 
     @NotBlank(message = "City is required")
     private String city;
@@ -39,13 +39,19 @@ public class RegisterRequest {
     @NotNull(message = "Role is required")
     private Role role;
 
-
-    // Dealer-specific fields.
-    // Required only when role == DEALER.
+    // Dealer-specific
 
     private String showroomName;
 
     private String gstNumber;
 
     private String licenseNumber;
+
+    private String address;
+
+    private String pinCode;
+
+    private String contactPhone;
+
+    private String workingHours;
 }

@@ -8,28 +8,23 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/test")
 public class TestController {
 
-    @GetMapping("/protected")
-    public String protectedEndpoint() {
-        return "JWT authentication successful";
-    }
-
-    @GetMapping("/buyer")
-    public String buyerEndpoint() {
-        return "Buyer access successful";
+    @GetMapping("/customer")
+    public String customer() {
+        return "Customer API";
     }
 
     @GetMapping("/dealer")
-    public String dealerEndpoint() {
-        return "Dealer access successful";
-    }
-
-    @GetMapping("/bank")
-    public String bankEndpoint() {
-        return "Bank access successful";
+    public String dealer() {
+        return "Dealer API";
     }
 
     @GetMapping("/admin")
-    public String adminEndpoint() {
-        return "Admin access successful";
+    public String admin() {
+        return "Admin API";
+    }
+
+    @GetMapping("/protected")
+    public String protectedApi() {
+        return "Protected API";
     }
 }

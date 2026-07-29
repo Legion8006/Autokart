@@ -10,9 +10,12 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.demo.dto.AuthResponse;
 import com.example.demo.dto.LoginRequest;
 import com.example.demo.dto.RegisterRequest;
+import com.example.demo.dto.UserResponse;
 import com.example.demo.entity.Dealer;
 import com.example.demo.entity.Role;
 import com.example.demo.entity.User;
+import com.example.demo.entity.UserStatus;
+import com.example.demo.entity.DealerStatus;
 import com.example.demo.exception.EmailAlreadyExistsException;
 import com.example.demo.repositories.DealerRepository;
 import com.example.demo.repositories.UserRepository;
@@ -41,6 +44,20 @@ public class AuthService {
 
 		// This was missing
 		this.dealerRepository = dealerRepository;
+	}
+	
+	public UserResponse getCurrentUser(String email) {
+
+	    User user = userRepository.findByEmail(email)
+	            .orElseThrow(() -> new RuntimeException("User not found"));
+
+	    return new UserResponse(
+	            user.getId(),
+	            user.getFirstName(),
+	            user.getLastName(),
+	            user.getEmail(),
+	            user.getRole()
+	    );
 	}
 
 	// REGISTER
@@ -100,28 +117,28 @@ public class AuthService {
 			if (dealerRepository.existsByGstNumber(gstNumber)) {
 				throw new IllegalArgumentException("GST number already registered");
 			}
-
-			if (dealerRepository.existsByLicenseNumber(licenseNumber)) {
-				throw new IllegalArgumentException("License number already registered");
-			}
 		}
 
 		// 5. Create common user
 		User user = new User();
 
-		user.setName(request.getName().trim());
+		user.setFirstName(request.getFirstName().trim());
+
+		user.setLastName(request.getLastName().trim());
 
 		user.setEmail(email);
 
-		user.setPassword(passwordEncoder.encode(request.getPassword()));
+		user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
 
-		user.setPhone(request.getPhone().trim());
+		user.setMobile(request.getMobile().trim());
 
 		user.setCity(request.getCity().trim());
 
 		user.setState(request.getState().trim());
 
 		user.setRole(request.getRole());
+
+		user.setStatus(UserStatus.ACTIVE);
 
 		User savedUser = userRepository.save(user);
 
@@ -138,6 +155,22 @@ public class AuthService {
 
 			dealer.setLicenseNumber(request.getLicenseNumber().trim().toUpperCase());
 
+			dealer.setAddress(request.getAddress());
+
+			dealer.setCity(request.getCity());
+
+			dealer.setState(request.getState());
+
+			dealer.setPinCode(request.getPinCode());
+
+			dealer.setContactPhone(request.getContactPhone());
+
+			dealer.setWorkingHours(request.getWorkingHours());
+
+			dealer.setRating(0.0f);
+
+			dealer.setStatus(DealerStatus.PENDING);
+
 			dealerRepository.save(dealer);
 		}
 
@@ -149,19 +182,17 @@ public class AuthService {
 
 		String email = request.getEmail().trim().toLowerCase();
 
-		// Spring Security verifies email + password
-		authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, request.getPassword()));
+		try {
+			authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, request.getPassword()));
+		} catch (Exception e) {
+			e.printStackTrace(); // VERY IMPORTANT
+			throw e;
+		}
 
-		// Load authenticated user details
-		UserDetails userDetails = userDetailsService.loadUserByUsername(email);
-
-		// Generate JWT
-		String token = jwtService.generateToken(userDetails);
-
-		// Get actual database user
 		User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
 
-		// Return JWT + safe user information
-		return new AuthResponse(token, user.getId(), user.getName(), user.getEmail(), user.getRole());
+		String token = jwtService.generateToken(user);
+
+		return new AuthResponse(token);
 	}
 }

@@ -2,6 +2,8 @@ package com.example.demo.security;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.crypto.SecretKey;
 
@@ -13,69 +15,81 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 
+import com.example.demo.entity.Admin;
+import com.example.demo.entity.User;
+
 @Service
 public class JwtService {
 
-    @Value("${jwt.secret}")
-    private String secretKey;
+	@Value("${jwt.secret}")
+	private String secretKey;
 
-    @Value("${jwt.expiration}")
-    private long jwtExpiration;
+	@Value("${jwt.expiration}")
+	private long jwtExpiration;
 
-    private SecretKey getSigningKey() {
+	private SecretKey getSigningKey() {
 
-        return Keys.hmacShaKeyFor(
-                secretKey.getBytes(StandardCharsets.UTF_8)
-        );
-    }
+		return Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
+	}
 
-    public String generateToken(UserDetails userDetails) {
+	public String generateToken(User user) {
 
-        return Jwts.builder()
-                .subject(userDetails.getUsername())
-                .issuedAt(new Date())
-                .expiration(
-                    new Date(
-                        System.currentTimeMillis()
-                        + jwtExpiration
-                    )
-                )
-                .signWith(getSigningKey())
-                .compact();
-    }
+	    return Jwts.builder()
+	            .subject(user.getEmail())
+	            .claim("id", user.getId())
+	            .claim("firstName", user.getFirstName())
+	            .claim("lastName", user.getLastName())
+	            .claim("role", user.getRole().name())
+	            .issuedAt(new Date())
+	            .expiration(new Date(System.currentTimeMillis() + jwtExpiration))
+	            .signWith(getSigningKey())
+	            .compact();
+	}
 
-    public String extractUsername(String token) {
+	public String generateAdminToken(Admin admin) {
 
-        return extractAllClaims(token)
-                .getSubject();
-    }
+	    return Jwts.builder()
+	            .subject(admin.getEmail())
+	            .claim("id", admin.getId())
+	            .claim("firstName", admin.getFirstName())
+	            .claim("lastName", admin.getLastName())
+	            .claim("role", admin.getRole().name())
+	            .issuedAt(new Date())
+	            .expiration(new Date(System.currentTimeMillis() + jwtExpiration))
+	            .signWith(getSigningKey())
+	            .compact();
+	}
+	
+	public String extractRole(String token) {
 
-    public boolean isTokenValid(
-            String token,
-            UserDetails userDetails) {
+	    return extractAllClaims(token)
+	            .get("role", String.class);
+	}
 
-        String username =
-                extractUsername(token);
+	public Claims extractClaims(String token) {
 
-        return username.equals(
-                    userDetails.getUsername()
-                )
-                && !isTokenExpired(token);
-    }
+	    return extractAllClaims(token);
+	}
 
-    private boolean isTokenExpired(String token) {
+	public String extractUsername(String token) {
 
-        return extractAllClaims(token)
-                .getExpiration()
-                .before(new Date());
-    }
+		return extractAllClaims(token).getSubject();
+	}
 
-    private Claims extractAllClaims(String token) {
+	public boolean isTokenValid(String token, UserDetails userDetails) {
 
-        return Jwts.parser()
-                .verifyWith(getSigningKey())
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
-    }
+		String username = extractUsername(token);
+
+		return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
+	}
+
+	private boolean isTokenExpired(String token) {
+
+		return extractAllClaims(token).getExpiration().before(new Date());
+	}
+
+	private Claims extractAllClaims(String token) {
+
+		return Jwts.parser().verifyWith(getSigningKey()).build().parseSignedClaims(token).getPayload();
+	}
 }

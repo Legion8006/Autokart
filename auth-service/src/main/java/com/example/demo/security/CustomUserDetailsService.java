@@ -6,6 +6,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import com.example.demo.entity.User;
+import com.example.demo.entity.UserStatus;
 import com.example.demo.repositories.UserRepository;
 
 @Service
@@ -13,9 +14,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     private final UserRepository userRepository;
 
-    public CustomUserDetailsService(
-            UserRepository userRepository) {
-
+    public CustomUserDetailsService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
@@ -26,14 +25,16 @@ public class CustomUserDetailsService implements UserDetailsService {
         User user = userRepository
                 .findByEmail(email)
                 .orElseThrow(() ->
-                    new UsernameNotFoundException(
-                        "User not found with email: " + email
-                    )
-                );
+                        new UsernameNotFoundException(
+                                "User not found with email: " + email));
+        
+        if (user.getStatus() != UserStatus.ACTIVE) {
+            throw new UsernameNotFoundException("User account is not active");
+        }
 
         return org.springframework.security.core.userdetails.User
                 .withUsername(user.getEmail())
-                .password(user.getPassword())
+                .password(user.getPasswordHash())
                 .roles(user.getRole().name())
                 .build();
     }
