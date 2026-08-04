@@ -7,8 +7,8 @@ import com.autocart.businessservice.dto.VariantResponse;
 
 public interface VariantService {
 
-    List<VariantResponse> getVariantsByModel(String modelId);
+    List<VariantResponse> getVariantsByModel(Long modelId);
     
-    VariantDetailsResponse getVariantDetails(String variantId);
+    VariantDetailsResponse getVariantDetails(Long variantId);
 
 }

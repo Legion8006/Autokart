@@ -12,9 +12,8 @@ import lombok.*;
 public class Admin {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.UUID)
-	@Column(length = 36)
-	private String id;
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
     @Column(name = "first_name", nullable = false, length = 50)
     private String firstName;

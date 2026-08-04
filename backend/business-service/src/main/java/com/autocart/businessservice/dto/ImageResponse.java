@@ -13,10 +13,12 @@ import lombok.Setter;
 @AllArgsConstructor
 public class ImageResponse {
 
-    private String id;
+    private Long id;
 
     private String imageUrl;
 
     private ImageType imageType;
+    
+    private String colourName;
 
 }

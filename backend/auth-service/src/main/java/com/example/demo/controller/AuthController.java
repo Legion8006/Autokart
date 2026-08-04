@@ -14,7 +14,6 @@ import com.example.demo.dto.RegisterRequest;
 import com.example.demo.dto.UpdateProfileRequest;
 import com.example.demo.dto.UserProfileResponse;
 import com.example.demo.service.AuthService;
-import com.example.demo.dto.ChangePasswordRequest;
 
 import jakarta.validation.Valid;
 

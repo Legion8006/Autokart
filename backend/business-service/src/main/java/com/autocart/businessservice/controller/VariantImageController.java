@@ -2,6 +2,7 @@ package com.autocart.businessservice.controller;
 
 import java.util.List;
 
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,7 +23,7 @@ public class VariantImageController {
 
     @GetMapping("/{variantId}/images")
     public List<ImageResponse> getImagesByVariant(
-            @PathVariable String variantId) {
+            @PathVariable Long variantId) {
 
         return imageService.getImagesByVariant(variantId);
     }

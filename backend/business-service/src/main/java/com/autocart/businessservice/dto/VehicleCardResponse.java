@@ -16,7 +16,9 @@ import lombok.Setter;
 @Setter
 public class VehicleCardResponse {
 
-    private String variantId;
+    private Long variantId;
+
+    private Long modelId;
 
     private String brand;
 

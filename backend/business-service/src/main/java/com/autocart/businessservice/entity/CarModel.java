@@ -19,14 +19,14 @@ import lombok.*;
 public class CarModel {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.UUID)
-	@Column(length = 36)
-	private String id;
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "brand_id", nullable = false)
 	private Brand brand;
 
+	@com.fasterxml.jackson.annotation.JsonIgnore
 	@OneToMany(mappedBy = "model", cascade = CascadeType.ALL)
 	private List<CarVariant> variants;
 
@@ -38,6 +38,9 @@ public class CarModel {
 	private BodyType bodyType;
 
 	private Integer launchYear;
+	
+	@Column(length = 255)
+	private String thumbnail;
 
 	@Column(updatable = false)
 	private LocalDateTime createdAt;

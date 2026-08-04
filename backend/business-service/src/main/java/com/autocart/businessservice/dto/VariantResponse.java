@@ -16,7 +16,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class VariantResponse {
 
-    private String id;
+    private Long id;
 
     private String variantName;
 

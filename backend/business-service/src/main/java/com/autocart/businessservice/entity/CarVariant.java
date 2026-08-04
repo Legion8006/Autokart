@@ -19,9 +19,8 @@ import lombok.*;
 public class CarVariant {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.UUID)
-	@Column(length = 36)
-	private String id;
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "model_id", nullable = false)

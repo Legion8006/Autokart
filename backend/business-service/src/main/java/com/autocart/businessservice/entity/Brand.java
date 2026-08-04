@@ -27,9 +27,8 @@ import jakarta.persistence.CascadeType;
 public class Brand {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.UUID)
-	@Column(length = 36)
-	private String id;
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
 	@Column(nullable = false, unique = true, length = 100)
 	private String name;
@@ -42,12 +41,19 @@ public class Brand {
 
 	@Column(name = "created_at", updatable = false)
 	private LocalDateTime createdAt;
+	
+	@Column(name = "banner_url", length = 255)
+	private String bannerUrl;
+
+	@Column(length = 255)
+	private String tagline;
 
 	@PrePersist
 	public void onCreate() {
 		this.createdAt = LocalDateTime.now();
 	}
 
+	@com.fasterxml.jackson.annotation.JsonIgnore
 	@OneToMany(mappedBy = "brand", cascade = CascadeType.ALL)
 	private List<CarModel> carModels;
 }

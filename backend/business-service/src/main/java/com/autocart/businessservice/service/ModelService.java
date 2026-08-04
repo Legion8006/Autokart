@@ -6,6 +6,8 @@ import com.autocart.businessservice.dto.ModelResponse;
 
 public interface ModelService {
 
-    List<ModelResponse> getModelsByBrand(String brandId);
+    List<ModelResponse> getModelsByBrand(Long brandId);
+    
+    ModelResponse getModelById(Long modelId);
 
 }

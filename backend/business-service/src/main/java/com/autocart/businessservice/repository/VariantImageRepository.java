@@ -9,7 +9,7 @@ import com.autocart.businessservice.entity.CarVariant;
 import com.autocart.businessservice.entity.VariantImage;
 
 @Repository
-public interface VariantImageRepository extends JpaRepository<VariantImage, String> {
+public interface VariantImageRepository extends JpaRepository<VariantImage, Long> {
 
     List<VariantImage> findByVariant(CarVariant variant);
 

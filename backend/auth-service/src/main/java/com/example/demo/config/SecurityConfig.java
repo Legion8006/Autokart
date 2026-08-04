@@ -48,16 +48,16 @@ public class SecurityConfig {
 
 				.authorizeHttpRequests(auth -> auth
 
-						.requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
+						.requestMatchers("/api/auth/register", "/api/auth/login", "/api/admin/login").permitAll()
 
-						.requestMatchers("/api/admin/**").permitAll()
+						.requestMatchers("/api/admin/**").hasAnyRole("SUPER_ADMIN", "ADMIN")
 
 						// Role-specific test endpoints
 						.requestMatchers("/api/test/customer").hasRole("CUSTOMER")
 
 						.requestMatchers("/api/test/dealer").hasRole("DEALER")
 
-						.requestMatchers("/api/test/admin").hasAnyRole("SUPER_ADMIN", "MODERATOR")
+						.requestMatchers("/api/test/admin").hasAnyRole("SUPER_ADMIN", "MODERATOR", "ADMIN")
 
 						// Any logged-in user can access this
 						.requestMatchers("/api/test/protected").authenticated()

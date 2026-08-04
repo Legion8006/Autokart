@@ -5,6 +5,7 @@ import com.example.demo.entity.Role;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
@@ -28,6 +29,7 @@ public class RegisterRequest {
     private String password;
 
     @NotBlank(message = "Mobile number is required")
+    @Pattern(regexp = "^[6-9]\\d{9}$", message = "Invalid Indian mobile number")
     private String mobile;
 
     @NotBlank(message = "City is required")
@@ -54,4 +56,8 @@ public class RegisterRequest {
     private String contactPhone;
 
     private String workingHours;
+
+    private Long brandId;
+
+    private String docUrl;
 }

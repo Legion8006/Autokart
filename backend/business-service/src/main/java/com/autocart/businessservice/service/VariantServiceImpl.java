@@ -13,7 +13,10 @@ import com.autocart.businessservice.repository.CarModelRepository;
 import com.autocart.businessservice.repository.CarVariantRepository;
 import com.autocart.businessservice.service.VariantService;
 
+import org.springframework.transaction.annotation.Transactional;
+
 @Service
+@Transactional(readOnly = true)
 public class VariantServiceImpl implements VariantService {
 
     private final CarModelRepository carModelRepository;
@@ -26,7 +29,7 @@ public class VariantServiceImpl implements VariantService {
     }
 
     @Override
-    public List<VariantResponse> getVariantsByModel(String modelId) {
+    public List<VariantResponse> getVariantsByModel(Long modelId) {
 
         CarModel model = carModelRepository.findById(modelId)
                 .orElseThrow(() ->
@@ -53,7 +56,7 @@ public class VariantServiceImpl implements VariantService {
     }
     
     @Override
-    public VariantDetailsResponse getVariantDetails(String variantId) {
+    public VariantDetailsResponse getVariantDetails(Long variantId) {
 
         CarVariant variant = carVariantRepository.findById(variantId)
                 .orElseThrow(() ->
@@ -69,8 +72,12 @@ public class VariantServiceImpl implements VariantService {
                 variant.getId(),
 
                 variant.getModel().getBrand().getName(),
+                
+                variant.getModel().getId(),
 
                 variant.getModel().getName(),
+                
+                variant.getModel().getThumbnail(),
 
                 variant.getVariantName(),
 

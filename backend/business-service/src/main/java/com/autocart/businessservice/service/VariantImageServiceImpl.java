@@ -12,7 +12,10 @@ import com.autocart.businessservice.repository.CarVariantRepository;
 import com.autocart.businessservice.repository.VariantImageRepository;
 import com.autocart.businessservice.service.VariantImageService;
 
+import org.springframework.transaction.annotation.Transactional;
+
 @Service
+@Transactional(readOnly = true)
 public class VariantImageServiceImpl implements VariantImageService {
 
     private final CarVariantRepository carVariantRepository;
@@ -25,7 +28,7 @@ public class VariantImageServiceImpl implements VariantImageService {
     }
 
     @Override
-    public List<ImageResponse> getImagesByVariant(String variantId) {
+    public List<ImageResponse> getImagesByVariant(Long variantId) {
 
         CarVariant variant = carVariantRepository.findById(variantId)
                 .orElseThrow(() ->
@@ -41,9 +44,15 @@ public class VariantImageServiceImpl implements VariantImageService {
     private ImageResponse mapToImageResponse(VariantImage image) {
 
         return new ImageResponse(
-                image.getId(),
-                image.getImageUrl(),
-                image.getImageType()
-        );
+
+        	    image.getId(),
+
+        	    image.getImageUrl(),
+
+        	    image.getImageType(),
+
+        	    image.getColourName()
+
+       );
     }
 }

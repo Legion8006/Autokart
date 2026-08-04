@@ -6,6 +6,6 @@ import com.autocart.businessservice.dto.ImageResponse;
 
 public interface VariantImageService {
 
-    List<ImageResponse> getImagesByVariant(String variantId);
+    List<ImageResponse> getImagesByVariant(Long variantId);
 
 }

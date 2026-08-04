@@ -23,14 +23,14 @@ public class VariantController {
 
     @GetMapping("/model/{modelId}")
     public List<VariantResponse> getVariantsByModel(
-            @PathVariable String modelId) {
+            @PathVariable Long modelId) {
 
         return variantService.getVariantsByModel(modelId);
     }
 
     @GetMapping("/{variantId}")
     public VariantDetailsResponse getVariantDetails(
-            @PathVariable String variantId) {
+            @PathVariable Long variantId) {
 
         return variantService.getVariantDetails(variantId);
     }

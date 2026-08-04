@@ -7,6 +7,6 @@ import java.util.Optional;
 import com.autocart.businessservice.entity.Brand;
 
 @Repository
-public interface BrandRepository extends JpaRepository<Brand, String> {
-	Optional<Brand> findById(String id);
+public interface BrandRepository extends JpaRepository<Brand, Long> {
+	Optional<Brand> findById(Long id);
 }

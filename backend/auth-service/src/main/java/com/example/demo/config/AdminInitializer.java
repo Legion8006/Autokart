@@ -22,27 +22,20 @@ public class AdminInitializer implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) {
-
 		String adminEmail = "admin@autocart.com";
 
-		if (!adminRepository.existsByEmail(adminEmail)) {
+		Admin admin = adminRepository.findByEmail(adminEmail).orElseGet(() -> {
+			Admin newAdmin = new Admin();
+			newAdmin.setEmail(adminEmail);
+			return newAdmin;
+		});
 
-			Admin admin = new Admin();
+		admin.setFirstName("System");
+		admin.setLastName("Administrator");
+		admin.setPasswordHash(passwordEncoder.encode("admin123"));
+		admin.setRole(AdminRole.SUPER_ADMIN);
 
-			admin.setFirstName("System");
-			admin.setLastName("Administrator");
-
-			admin.setEmail(adminEmail);
-
-			admin.setPasswordHash(passwordEncoder.encode("Admin@123"));
-
-			admin.setRole(AdminRole.SUPER_ADMIN);
-
-			adminRepository.save(admin);
-
-		} else {
-
-			System.out.println("Default Admin already exists.");
-		}
+		adminRepository.save(admin);
+		System.out.println("Default Admin initialized successfully with email: admin@autocart.com");
 	}
 }

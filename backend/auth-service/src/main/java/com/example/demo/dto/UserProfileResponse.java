@@ -7,7 +7,9 @@ import lombok.Setter;
 @Setter
 public class UserProfileResponse {
 
-    private String id;
+    private Long id;
+
+    private Long dealerId;
 
     private String firstName;
 
@@ -22,4 +24,10 @@ public class UserProfileResponse {
     private String state;
 
     private String role;
+
+    private String status;
+
+    // Returned by /auth/me so the frontend can re-hydrate the JWT token
+    // in Redux state after a page refresh (avoids re-login)
+    private String token;
 }

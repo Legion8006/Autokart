@@ -16,11 +16,15 @@ import lombok.Setter;
 @AllArgsConstructor
 public class VariantDetailsResponse {
 
-    private String id;
+    private Long id;
 
     private String brandName;
+    
+    private Long modelId;
 
     private String modelName;
+    
+    private String heroImage;
 
     private String variantName;
 

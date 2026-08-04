@@ -1,36 +1,39 @@
 package com.autocart.businessservice.service;
 
-import com.autocart.businessservice.dto.VehicleCardResponse;
-import com.autocart.businessservice.dto.VehiclePageResponse;
-import com.autocart.businessservice.entity.CarVariant;
-import com.autocart.businessservice.entity.ImageType;
-import com.autocart.businessservice.entity.VariantImage;
-import com.autocart.businessservice.repository.CarVariantRepository;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
-import org.springframework.transaction.annotation.Transactional;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.autocart.businessservice.dto.VehicleCardResponse;
+import com.autocart.businessservice.dto.VehiclePageResponse;
+import com.autocart.businessservice.entity.CarVariant;
+import com.autocart.businessservice.entity.FuelType;
+import com.autocart.businessservice.entity.ImageType;
+import com.autocart.businessservice.entity.VariantImage;
+import com.autocart.businessservice.repository.CarVariantRepository;
 
 @Service
+@Transactional(readOnly = true)
 public class VehicleServiceImpl implements VehicleService {
 
-	@Autowired
-	private CarVariantRepository carVariantRepository;
+	private final CarVariantRepository carVariantRepository;
+
+	public VehicleServiceImpl(CarVariantRepository carVariantRepository) {
+		this.carVariantRepository = carVariantRepository;
+	}
 
 	@Override
-	@Transactional(readOnly = true)
-	public VehiclePageResponse getAllVehicles(int page, int size) {
+	public VehiclePageResponse getAllVehicles(int page, int size, String brand, FuelType fuelType, BigDecimal minPrice, BigDecimal maxPrice) {
 
 		Pageable pageable = PageRequest.of(page, size);
 
-		Page<CarVariant> variantPage = carVariantRepository.findAll(pageable);
+		Page<CarVariant> variantPage = carVariantRepository.findAllFiltered(pageable, brand, fuelType, minPrice, maxPrice);
 
 		List<VehicleCardResponse> vehicleCards = new ArrayList<>();
 
@@ -40,9 +43,11 @@ public class VehicleServiceImpl implements VehicleService {
 
 			response.setVariantId(variant.getId());
 
-			response.setBrand(variant.getModel().getBrand().getName());
-
-			response.setModel(variant.getModel().getName());
+			if (variant.getModel() != null) {
+				response.setModelId(variant.getModel().getId());
+				response.setBrand(variant.getModel().getBrand().getName());
+				response.setModel(variant.getModel().getName());
+			}
 
 			response.setVariant(variant.getVariantName());
 
@@ -63,6 +68,10 @@ public class VehicleServiceImpl implements VehicleService {
 						break;
 					}
 				}
+			}
+
+			if (thumbnail == null && variant.getModel() != null) {
+				thumbnail = variant.getModel().getThumbnail();
 			}
 
 			response.setThumbnail(thumbnail);

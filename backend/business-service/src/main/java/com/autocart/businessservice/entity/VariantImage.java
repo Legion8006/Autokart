@@ -11,10 +11,10 @@ import lombok.*;
 public class VariantImage {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(length = 36)
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "variant_id", nullable = false)
     private CarVariant variant;
@@ -25,5 +25,8 @@ public class VariantImage {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ImageType imageType;
+    
+    @Column(length = 30)
+    private String colourName;
 
 }

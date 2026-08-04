@@ -26,9 +26,8 @@ import jakarta.persistence.PreUpdate;
 public class User {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.UUID)
-	@Column(length = 36)
-	private String id;
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
     @Column(nullable = false)
     private String firstName;
