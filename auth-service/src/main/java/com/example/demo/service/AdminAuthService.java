@@ -41,6 +41,6 @@ public class AdminAuthService {
 
         String token = jwtService.generateAdminToken(admin);
 
-        return new AuthResponse(token);
+        return new AuthResponse(token, admin.getId(), null, admin.getFirstName(), admin.getLastName(), admin.getEmail(), admin.getRole().name(), "ACTIVE");
     }
 }

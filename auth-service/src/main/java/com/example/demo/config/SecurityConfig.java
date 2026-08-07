@@ -44,19 +44,20 @@ public class SecurityConfig {
 
 		http.csrf(csrf -> csrf.disable())
 
-				.cors(cors -> cors.configurationSource(corsConfigurationSource()))
+				.cors(cors -> cors.disable())
 
 				.authorizeHttpRequests(auth -> auth
 
-						// Public authentication endpoints
-						.requestMatchers("/api/auth/**", "/api/admin/**").permitAll()
+						.requestMatchers("/api/auth/register", "/api/auth/login", "/api/admin/login").permitAll()
+
+						.requestMatchers("/api/admin/**").hasAnyRole("SUPER_ADMIN", "ADMIN")
 
 						// Role-specific test endpoints
 						.requestMatchers("/api/test/customer").hasRole("CUSTOMER")
 
 						.requestMatchers("/api/test/dealer").hasRole("DEALER")
 
-						.requestMatchers("/api/test/admin").hasAnyRole("SUPER_ADMIN", "MODERATOR")
+						.requestMatchers("/api/test/admin").hasAnyRole("SUPER_ADMIN", "MODERATOR", "ADMIN")
 
 						// Any logged-in user can access this
 						.requestMatchers("/api/test/protected").authenticated()
@@ -69,25 +70,5 @@ public class SecurityConfig {
 				.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
 		return http.build();
-	}
-
-	@Bean
-	public CorsConfigurationSource corsConfigurationSource() {
-
-		CorsConfiguration configuration = new CorsConfiguration();
-
-		configuration.setAllowedOrigins(List.of("http://localhost:5173"));
-
-		configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-
-		configuration.setAllowedHeaders(List.of("*"));
-
-		configuration.setAllowCredentials(true);
-
-		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-
-		source.registerCorsConfiguration("/**", configuration);
-
-		return source;
 	}
 }

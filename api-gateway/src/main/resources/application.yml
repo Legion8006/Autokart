@@ -1,0 +1,55 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "http://localhost:5173"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
+      routes:
+        # 1. Business Service Admin sub-routes (Higher priority)
+        - id: business-admin-catalog
+          uri: lb://BUSINESS-SERVICE
+          predicates:
+            - Path=/api/admin/catalog/**
+        - id: business-admin-inventory
+          uri: lb://BUSINESS-SERVICE
+          predicates:
+            - Path=/api/admin/inventory/**
+
+        # 2. Auth Service endpoints
+        - id: auth-service-routes
+          uri: lb://AUTH-SERVICE
+          predicates:
+            - Path=/api/auth/**, /api/admin/**, /api/test/**
+
+        # 3. Business Service public & dealer endpoints
+        - id: business-service-routes
+          uri: lb://BUSINESS-SERVICE
+          predicates:
+            - Path=/api/brands/**, /api/models/**, /api/variants/**, /api/vehicles/**, /api/dealer/**, /api/test-drives/**, /api/user-context/**
+
+        # 4. Transaction Service endpoints
+        - id: transaction-service-routes
+          uri: lb://TRANSACTION-SERVICE
+          predicates:
+            - Path=/api/transaction/**
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka/

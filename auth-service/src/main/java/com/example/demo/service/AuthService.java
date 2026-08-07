@@ -6,10 +6,16 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import com.example.demo.dto.DealerProfileResponse;
+import com.example.demo.dto.UpdateProfileRequest;
+import com.example.demo.dto.ChangePasswordRequest;
 
 import com.example.demo.dto.AuthResponse;
 import com.example.demo.dto.LoginRequest;
 import com.example.demo.dto.RegisterRequest;
+import com.example.demo.dto.UserProfileResponse;
 import com.example.demo.dto.UserResponse;
 import com.example.demo.entity.Dealer;
 import com.example.demo.entity.Role;
@@ -17,33 +23,44 @@ import com.example.demo.entity.User;
 import com.example.demo.entity.UserStatus;
 import com.example.demo.entity.DealerStatus;
 import com.example.demo.exception.EmailAlreadyExistsException;
+import java.util.Optional;
+import com.example.demo.entity.Admin;
+import com.example.demo.repositories.AdminRepository;
 import com.example.demo.repositories.DealerRepository;
+import com.example.demo.repositories.DealerBrandRepository;
 import com.example.demo.repositories.UserRepository;
 import com.example.demo.security.CustomUserDetailsService;
 import com.example.demo.security.JwtService;
+import com.example.demo.entity.DealerBrand;
+import com.example.demo.dto.DealerDetailResponse;
+import com.example.demo.dto.DealerStatusRequest;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class AuthService {
 
 	private final UserRepository userRepository;
+	private final AdminRepository adminRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final AuthenticationManager authenticationManager;
 	private final CustomUserDetailsService userDetailsService;
 	private final JwtService jwtService;
 	private final DealerRepository dealerRepository;
+	private final DealerBrandRepository dealerBrandRepository;
 
-	public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder,
+	public AuthService(UserRepository userRepository, AdminRepository adminRepository, PasswordEncoder passwordEncoder,
 			AuthenticationManager authenticationManager, CustomUserDetailsService userDetailsService,
-			JwtService jwtService, DealerRepository dealerRepository) {
+			JwtService jwtService, DealerRepository dealerRepository, DealerBrandRepository dealerBrandRepository) {
 
 		this.userRepository = userRepository;
+		this.adminRepository = adminRepository;
 		this.passwordEncoder = passwordEncoder;
 		this.authenticationManager = authenticationManager;
 		this.userDetailsService = userDetailsService;
 		this.jwtService = jwtService;
-
-		// This was missing
 		this.dealerRepository = dealerRepository;
+		this.dealerBrandRepository = dealerBrandRepository;
 	}
 	
 	public UserResponse getCurrentUser(String email) {
@@ -51,6 +68,7 @@ public class AuthService {
 	    User user = userRepository.findByEmail(email)
 	            .orElseThrow(() -> new RuntimeException("User not found"));
 
+	    
 	    return new UserResponse(
 	            user.getId(),
 	            user.getFirstName(),
@@ -72,9 +90,14 @@ public class AuthService {
 		// 2. Normalize email before duplicate check
 		String email = request.getEmail().trim().toLowerCase();
 
-		// 3. Check duplicate email
+		// 3. Check duplicate email and mobile
 		if (userRepository.existsByEmail(email)) {
 			throw new EmailAlreadyExistsException("Email already registered");
+		}
+
+		String mobile = request.getMobile().trim();
+		if (userRepository.existsByMobile(mobile)) {
+			throw new IllegalArgumentException("Mobile number already registered");
 		}
 
 		// 4. Validate dealer-specific information
@@ -171,10 +194,95 @@ public class AuthService {
 
 			dealer.setStatus(DealerStatus.PENDING);
 
-			dealerRepository.save(dealer);
+			Dealer savedDealer = dealerRepository.save(dealer);
+
+			if (request.getBrandId() != null) {
+				DealerBrand dealerBrand = new DealerBrand();
+				dealerBrand.setDealer(savedDealer);
+				dealerBrand.setBrandId(request.getBrandId());
+				dealerBrand.setAuthCertUrl(request.getDocUrl());
+				dealerBrand.setStatus(DealerStatus.PENDING);
+				dealerBrandRepository.save(dealerBrand);
+			}
 		}
 
 		return "Registration successful";
+	}
+
+	public List<DealerDetailResponse> getPendingDealers() {
+		return dealerRepository.findByStatus(DealerStatus.PENDING).stream().map(dealer -> {
+			DealerDetailResponse dto = new DealerDetailResponse();
+			dto.setId(dealer.getId());
+			dto.setUserId(dealer.getUser().getId());
+			dto.setFirstName(dealer.getUser().getFirstName());
+			dto.setLastName(dealer.getUser().getLastName());
+			dto.setEmail(dealer.getUser().getEmail());
+			dto.setMobile(dealer.getUser().getMobile());
+			dto.setShowroomName(dealer.getShowroomName());
+			dto.setLicenseNumber(dealer.getLicenseNumber());
+			dto.setGstNumber(dealer.getGstNumber());
+			dto.setAddress(dealer.getAddress());
+			dto.setCity(dealer.getCity());
+			dto.setState(dealer.getState());
+			dto.setPinCode(dealer.getPinCode());
+			dto.setContactPhone(dealer.getContactPhone());
+			dto.setWorkingHours(dealer.getWorkingHours());
+			dto.setStatus(dealer.getStatus().name());
+			dto.setRating(dealer.getRating());
+
+			List<DealerBrand> dbList = dealerBrandRepository.findByDealer(dealer);
+			if (!dbList.isEmpty()) {
+				dto.setBrandId(dbList.get(0).getBrandId());
+			}
+			return dto;
+		}).collect(Collectors.toList());
+	}
+
+	public List<DealerDetailResponse> getAllDealers() {
+		return dealerRepository.findAll().stream().map(dealer -> {
+			DealerDetailResponse dto = new DealerDetailResponse();
+			dto.setId(dealer.getId());
+			dto.setUserId(dealer.getUser().getId());
+			dto.setFirstName(dealer.getUser().getFirstName());
+			dto.setLastName(dealer.getUser().getLastName());
+			dto.setEmail(dealer.getUser().getEmail());
+			dto.setMobile(dealer.getUser().getMobile());
+			dto.setShowroomName(dealer.getShowroomName());
+			dto.setLicenseNumber(dealer.getLicenseNumber());
+			dto.setGstNumber(dealer.getGstNumber());
+			dto.setAddress(dealer.getAddress());
+			dto.setCity(dealer.getCity());
+			dto.setState(dealer.getState());
+			dto.setPinCode(dealer.getPinCode());
+			dto.setContactPhone(dealer.getContactPhone());
+			dto.setWorkingHours(dealer.getWorkingHours());
+			dto.setStatus(dealer.getStatus().name());
+			dto.setRating(dealer.getRating());
+
+			List<DealerBrand> dbList = dealerBrandRepository.findByDealer(dealer);
+			if (!dbList.isEmpty()) {
+				dto.setBrandId(dbList.get(0).getBrandId());
+			}
+			return dto;
+		}).collect(Collectors.toList());
+	}
+
+	@Transactional
+	public String updateDealerStatus(Long dealerId, DealerStatusRequest request) {
+		Dealer dealer = dealerRepository.findById(dealerId)
+				.orElseThrow(() -> new RuntimeException("Dealer not found with id: " + dealerId));
+
+		DealerStatus newStatus = DealerStatus.valueOf(request.getStatus().toUpperCase());
+		dealer.setStatus(newStatus);
+		dealerRepository.save(dealer);
+
+		List<DealerBrand> dbList = dealerBrandRepository.findByDealer(dealer);
+		for (DealerBrand db : dbList) {
+			db.setStatus(newStatus);
+			dealerBrandRepository.save(db);
+		}
+
+		return "Dealer status updated to " + newStatus.name();
 	}
 
 	// LOGIN
@@ -182,17 +290,215 @@ public class AuthService {
 
 		String email = request.getEmail().trim().toLowerCase();
 
-		try {
-			authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, request.getPassword()));
-		} catch (Exception e) {
-			e.printStackTrace(); // VERY IMPORTANT
-			throw e;
+		authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, request.getPassword()));
+
+		Optional<User> userOpt = userRepository.findByEmail(email);
+		if (userOpt.isPresent()) {
+			User user = userOpt.get();
+			Long dealerId = null;
+			String status = user.getStatus().name();
+			String showroomName = null;
+			String gstNumber = null;
+			String licenseNumber = null;
+
+			if (user.getRole() == Role.DEALER) {
+				Dealer dealer = dealerRepository.findByUser(user)
+						.orElseThrow(() -> new RuntimeException("Dealer profile not found"));
+				if (dealer.getStatus() != DealerStatus.APPROVED) {
+					throw new IllegalStateException(
+							"Dealer account status is " + dealer.getStatus().name().toLowerCase() + " and cannot log in yet");
+				}
+				dealerId = dealer.getId();
+				status = dealer.getStatus().name();
+				showroomName = dealer.getShowroomName();
+				gstNumber = dealer.getGstNumber();
+				licenseNumber = dealer.getLicenseNumber();
+			}
+			String token = jwtService.generateToken(user);
+			AuthResponse authResp = new AuthResponse(token, user.getId(), dealerId, user.getFirstName(), user.getLastName(), user.getEmail(),
+					user.getRole().name(), status);
+			authResp.setShowroomName(showroomName);
+			authResp.setGstNumber(gstNumber);
+			authResp.setLicenseNumber(licenseNumber);
+			return authResp;
 		}
 
-		User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
+		Optional<Admin> adminOpt = adminRepository.findByEmail(email);
+		if (adminOpt.isPresent()) {
+			Admin admin = adminOpt.get();
+			String token = jwtService.generateAdminToken(admin);
+			return new AuthResponse(token, admin.getId(), null, admin.getFirstName(), admin.getLastName(), admin.getEmail(),
+					admin.getRole().name(), "ACTIVE");
+		}
 
-		String token = jwtService.generateToken(user);
+		throw new RuntimeException("User not found");
+	}
+	
+	public UserProfileResponse getProfile() {
 
-		return new AuthResponse(token);
+	    Authentication authentication = SecurityContextHolder
+	            .getContext()
+	            .getAuthentication();
+
+	    String email = authentication.getName();
+
+	    Optional<User> userOpt = userRepository.findByEmail(email);
+	    if (userOpt.isPresent()) {
+	        User user = userOpt.get();
+
+	        if (user.getRole() != Role.DEALER) {
+	            UserProfileResponse response = new UserProfileResponse();
+	            response.setId(user.getId());
+	            response.setFirstName(user.getFirstName());
+	            response.setLastName(user.getLastName());
+	            response.setEmail(user.getEmail());
+	            response.setMobile(user.getMobile());
+	            response.setCity(user.getCity());
+	            response.setState(user.getState());
+	            response.setRole(user.getRole().name());
+	            response.setStatus(user.getStatus().name());
+	            // Re-generate token so frontend can rehydrate Redux state on page refresh
+	            response.setToken(jwtService.generateToken(user));
+	            return response;
+	        }
+
+	        Dealer dealer = dealerRepository.findByUser(user)
+	                .orElseThrow(() -> new RuntimeException("Dealer profile not found"));
+
+	        DealerProfileResponse response = new DealerProfileResponse();
+	        response.setId(user.getId());
+	        response.setDealerId(dealer.getId());
+	        response.setFirstName(user.getFirstName());
+	        response.setLastName(user.getLastName());
+	        response.setEmail(user.getEmail());
+	        response.setMobile(user.getMobile());
+	        response.setCity(user.getCity());
+	        response.setState(user.getState());
+	        response.setRole(user.getRole().name());
+	        response.setStatus(dealer.getStatus().name());
+	        response.setShowroomName(dealer.getShowroomName());
+	        response.setGstNumber(dealer.getGstNumber());
+	        response.setLicenseNumber(dealer.getLicenseNumber());
+	        response.setAddress(dealer.getAddress());
+	        response.setPinCode(dealer.getPinCode());
+	        response.setContactPhone(dealer.getContactPhone());
+	        response.setWorkingHours(dealer.getWorkingHours());
+	        response.setRating(dealer.getRating());
+	        // Re-generate token so frontend can rehydrate Redux state on page refresh
+	        response.setToken(jwtService.generateToken(user));
+	        return response;
+	    }
+
+	    Optional<Admin> adminOpt = adminRepository.findByEmail(email);
+	    if (adminOpt.isPresent()) {
+	        Admin admin = adminOpt.get();
+	        UserProfileResponse response = new UserProfileResponse();
+	        response.setId(admin.getId());
+	        response.setFirstName(admin.getFirstName());
+	        response.setLastName(admin.getLastName());
+	        response.setEmail(admin.getEmail());
+	        response.setRole(admin.getRole().name());
+	        // Re-generate token so frontend can rehydrate Redux state on page refresh
+	        response.setToken(jwtService.generateAdminToken(admin));
+	        return response;
+	    }
+
+	    throw new RuntimeException("User not found");
+	}
+	
+	@Transactional
+	public UserProfileResponse updateProfile(UpdateProfileRequest request) {
+
+	    Authentication authentication = SecurityContextHolder
+	            .getContext()
+	            .getAuthentication();
+
+	    String email = authentication.getName();
+
+	    User user = userRepository.findByEmail(email)
+	            .orElseThrow(() -> new RuntimeException("User not found"));
+
+	    // Update common user fields
+	    user.setFirstName(request.getFirstName().trim());
+	    user.setLastName(request.getLastName().trim());
+	    user.setMobile(request.getMobile().trim());
+	    user.setCity(request.getCity().trim());
+	    user.setState(request.getState().trim());
+
+	    userRepository.save(user);
+
+	    // Update dealer details if user is a dealer
+	    if (user.getRole() == Role.DEALER) {
+
+	        Dealer dealer = dealerRepository.findByUser(user)
+	                .orElseThrow(() -> new RuntimeException("Dealer profile not found"));
+
+	        dealer.setShowroomName(request.getShowroomName() != null
+	                ? request.getShowroomName().trim()
+	                : null);
+
+	        dealer.setAddress(request.getAddress() != null
+	                ? request.getAddress().trim()
+	                : null);
+
+	        dealer.setPinCode(request.getPinCode() != null
+	                ? request.getPinCode().trim()
+	                : null);
+
+	        dealer.setContactPhone(request.getContactPhone() != null
+	                ? request.getContactPhone().trim()
+	                : null);
+
+	        dealer.setWorkingHours(request.getWorkingHours() != null
+	                ? request.getWorkingHours().trim()
+	                : null);
+
+	        dealerRepository.save(dealer);
+	    }
+
+	    // Return updated profile
+	    return getProfile();
+	}
+	
+	@Transactional
+	public String changePassword(ChangePasswordRequest request) {
+
+	    Authentication authentication = SecurityContextHolder
+	            .getContext()
+	            .getAuthentication();
+
+	    String email = authentication.getName();
+
+	    User user = userRepository.findByEmail(email)
+	            .orElseThrow(() -> new RuntimeException("User not found"));
+
+	    // Verify current password
+	    if (!passwordEncoder.matches(request.getCurrentPassword(),
+	            user.getPasswordHash())) {
+
+	        throw new IllegalArgumentException("Current password is incorrect");
+	    }
+
+	    // Verify new password confirmation
+	    if (!request.getNewPassword()
+	            .equals(request.getConfirmPassword())) {
+
+	        throw new IllegalArgumentException("Passwords do not match");
+	    }
+
+	    // Prevent same password reuse
+	    if (passwordEncoder.matches(request.getNewPassword(),
+	            user.getPasswordHash())) {
+
+	        throw new IllegalArgumentException(
+	                "New password must be different from current password");
+	    }
+
+	    user.setPasswordHash(
+	            passwordEncoder.encode(request.getNewPassword()));
+
+	    userRepository.save(user);
+
+	    return "Password changed successfully";
 	}
 }
